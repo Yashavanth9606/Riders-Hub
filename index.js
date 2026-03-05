@@ -28,9 +28,19 @@ if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
 
 const app = express();
 
-// Middleware
+// Middleware - CORS updated for production
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman)
+    if (!origin) return callback(null, true);
+    // Allow localhost for development
+    if (origin.includes('localhost')) return callback(null, true);
+    // Allow any Vercel deployment
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
+    // Allow custom frontend URL from env
+    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
